@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Bell, Heart, Share2, Sparkles, Star, TrendingDown, Check } from "lucide-react";
 import { useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
-import { getProduct } from "@/lib/mock-data";
+import { getProduct, type Product, type Listing } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/product/$id")({
@@ -32,13 +32,14 @@ export const Route = createFileRoute("/product/$id")({
 const ranges = ["30d", "90d", "1y"] as const;
 
 function ProductPage() {
-  const { product } = Route.useLoaderData();
+  const { product } = Route.useLoaderData() as { product: Product };
   const [range, setRange] = useState<(typeof ranges)[number]>("90d");
   const [tracked, setTracked] = useState(false);
 
   const points = range === "30d" ? product.history.slice(-30) : product.history;
   const discount = Math.round(((product.mrp - product.currentPrice) / product.mrp) * 100);
-  const best = product.listings.slice().sort((a, b) => a.price - b.price)[0];
+  const best = product.listings.slice().sort((a: Listing, b: Listing) => a.price - b.price)[0];
+
 
   const verdict =
     product.currentPrice <= product.avg * 0.95
@@ -181,8 +182,9 @@ function ProductPage() {
             <div className="space-y-2">
               {product.listings
                 .slice()
-                .sort((a, b) => a.price - b.price)
-                .map((l) => (
+                .sort((a: Listing, b: Listing) => a.price - b.price)
+                .map((l: Listing) => (
+
                   <div
                     key={l.marketplace}
                     className={cn(
