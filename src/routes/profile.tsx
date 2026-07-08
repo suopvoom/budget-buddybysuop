@@ -1,11 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Bell, Crown, HelpCircle, LogOut, Settings, Wallet, ChevronRight, Heart } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Bell, Crown, HelpCircle, LogOut, Settings, Wallet, ChevronRight, Heart, LogIn } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Profile · BudgetBuddy" }] }),
   component: ProfilePage,
 });
+
+type Profile = { display_name: string | null; avatar_url: string | null; email: string | null };
 
 const rows = [
   { icon: Wallet, label: "Payment & cashback", value: "₹420 balance" },
@@ -16,23 +22,78 @@ const rows = [
 ];
 
 function ProfilePage() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [stats, setStats] = useState({ tracked: 0, alerts: 0 });
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [{ data: p }, { count: tracked }, { count: alerts }] = await Promise.all([
+        supabase.from("profiles").select("display_name, avatar_url, email").eq("id", user.id).maybeSingle(),
+        supabase.from("wishlist_items").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("price_alerts").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("active", true),
+      ]);
+      setProfile(p);
+      setStats({ tracked: tracked ?? 0, alerts: alerts ?? 0 });
+    })();
+  }, [user]);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    navigate({ to: "/auth" });
+  }
+
+  if (loading) return <AppShell title="Profile"><div className="mt-6 text-sm text-muted-foreground">Loading…</div></AppShell>;
+
+  if (!user) {
+    return (
+      <AppShell title="Your profile">
+        <div className="mt-8 rounded-3xl p-6 bg-gradient-to-br from-primary/15 to-accent/15 border border-primary/20 text-center">
+          <div className="h-14 w-14 mx-auto rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+            <LogIn className="h-6 w-6" />
+          </div>
+          <h2 className="font-display text-xl text-foreground mt-4">Sign in to BudgetBuddy</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Save your wishlist and get pinged the moment prices drop.
+          </p>
+          <Link
+            to="/auth"
+            className="mt-5 inline-flex items-center justify-center h-11 px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm"
+          >
+            Sign in or create account
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
+
+  const displayName = profile?.display_name || user.email?.split("@")[0] || "there";
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
     <AppShell title="Your profile">
       <div className="mt-3 flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display text-2xl text-primary-foreground">
-          A
-        </div>
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="h-16 w-16 rounded-full object-cover" />
+        ) : (
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-display text-2xl text-primary-foreground">
+            {initial}
+          </div>
+        )}
         <div>
-          <h2 className="font-display text-xl text-foreground">Aisha Kapoor</h2>
-          <p className="text-xs text-muted-foreground">aisha@example.com</p>
+          <h2 className="font-display text-xl text-foreground">{displayName}</h2>
+          <p className="text-xs text-muted-foreground">{profile?.email || user.email}</p>
         </div>
       </div>
 
       <div className="mt-5 grid grid-cols-3 gap-2">
         {[
-          { label: "Saved", value: "₹2.8k" },
-          { label: "Tracked", value: "24" },
-          { label: "Deals hit", value: "12" },
+          { label: "Saved", value: "₹0" },
+          { label: "Tracked", value: String(stats.tracked) },
+          { label: "Alerts", value: String(stats.alerts) },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl bg-secondary p-3 text-center">
             <p className="font-display text-lg text-foreground">{s.value}</p>
@@ -63,7 +124,10 @@ function ProfilePage() {
         ))}
       </div>
 
-      <button className="mt-5 w-full flex items-center justify-center gap-2 p-3 text-sm text-destructive font-medium">
+      <button
+        onClick={handleLogout}
+        className="mt-5 w-full flex items-center justify-center gap-2 p-3 text-sm text-destructive font-medium"
+      >
         <LogOut className="h-4 w-4" /> Log out
       </button>
     </AppShell>
