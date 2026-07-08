@@ -263,9 +263,10 @@ function ProductPage() {
         {/* Sticky action bar */}
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] p-4 bg-background/95 backdrop-blur-xl border-t border-border/60 flex gap-2">
           <button
-            onClick={() => setTracked((t) => !t)}
+            onClick={toggleTrack}
+            disabled={busy}
             className={cn(
-              "h-12 px-4 rounded-full flex items-center gap-2 font-medium text-sm border transition",
+              "h-12 px-4 rounded-full flex items-center gap-2 font-medium text-sm border transition disabled:opacity-60",
               tracked
                 ? "bg-success/10 border-success/40 text-success"
                 : "bg-background border-border text-foreground hover:bg-secondary",
