@@ -127,7 +127,7 @@ export type Database = {
           alert_type: Database["public"]["Enums"]["alert_type"]
           created_at: string
           id: string
-          product_id: string
+          product_ref: string
           target_price: number | null
           triggered_at: string | null
           user_id: string
@@ -137,7 +137,7 @@ export type Database = {
           alert_type?: Database["public"]["Enums"]["alert_type"]
           created_at?: string
           id?: string
-          product_id: string
+          product_ref: string
           target_price?: number | null
           triggered_at?: string | null
           user_id: string
@@ -147,20 +147,12 @@ export type Database = {
           alert_type?: Database["public"]["Enums"]["alert_type"]
           created_at?: string
           id?: string
-          product_id?: string
+          product_ref?: string
           target_price?: number | null
           triggered_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "price_alerts_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       price_history: {
         Row: {
@@ -364,33 +356,25 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          product_id: string
+          product_ref: string
           target_price: number | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          product_id: string
+          product_ref: string
           target_price?: number | null
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          product_id?: string
+          product_ref?: string
           target_price?: number | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "wishlist_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       wishlists: {
         Row: {
