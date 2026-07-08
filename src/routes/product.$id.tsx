@@ -1,9 +1,13 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Bell, Heart, Share2, Sparkles, Star, TrendingDown, Check } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
 import { getProduct, type Product, type Listing } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/product/$id")({
   loader: ({ params }) => {
@@ -33,8 +37,45 @@ const ranges = ["30d", "90d", "1y"] as const;
 
 function ProductPage() {
   const { product } = Route.useLoaderData() as { product: Product };
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [range, setRange] = useState<(typeof ranges)[number]>("90d");
   const [tracked, setTracked] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setTracked(false); return; }
+    supabase
+      .from("wishlist_items")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("product_ref", product.id)
+      .maybeSingle()
+      .then(({ data }) => setTracked(!!data));
+  }, [user, product.id]);
+
+  async function toggleTrack() {
+    if (!user) { navigate({ to: "/auth" }); return; }
+    setBusy(true);
+    if (tracked) {
+      const { error } = await supabase
+        .from("wishlist_items")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("product_ref", product.id);
+      if (error) toast.error("Couldn't untrack");
+      else { setTracked(false); toast.success("Removed from wishlist"); }
+    } else {
+      const { error } = await supabase.from("wishlist_items").insert({
+        user_id: user.id,
+        product_ref: product.id,
+        target_price: Math.round(product.currentPrice * 0.9),
+      });
+      if (error) toast.error("Couldn't track");
+      else { setTracked(true); toast.success("Tracking — we'll alert you on drops"); }
+    }
+    setBusy(false);
+  }
 
   const points = range === "30d" ? product.history.slice(-30) : product.history;
   const discount = Math.round(((product.mrp - product.currentPrice) / product.mrp) * 100);
@@ -222,9 +263,10 @@ function ProductPage() {
         {/* Sticky action bar */}
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] p-4 bg-background/95 backdrop-blur-xl border-t border-border/60 flex gap-2">
           <button
-            onClick={() => setTracked((t) => !t)}
+            onClick={toggleTrack}
+            disabled={busy}
             className={cn(
-              "h-12 px-4 rounded-full flex items-center gap-2 font-medium text-sm border transition",
+              "h-12 px-4 rounded-full flex items-center gap-2 font-medium text-sm border transition disabled:opacity-60",
               tracked
                 ? "bg-success/10 border-success/40 text-success"
                 : "bg-background border-border text-foreground hover:bg-secondary",
