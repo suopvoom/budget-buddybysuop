@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, TrendingDown, Heart, LogIn, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { getProduct } from "@/lib/mock-data";
+import { fetchProduct, type Product } from "@/lib/products";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/wishlist")({
   component: WishlistPage,
 });
 
-type Item = { id: string; product_ref: string; target_price: number | null };
+type Item = { id: string; product_ref: string; target_price: number | null; product: Product | null };
 
 function WishlistPage() {
   const { user, loading } = useAuth();
@@ -28,7 +28,14 @@ function WishlistPage() {
         .select("id, product_ref, target_price")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
-      setItems(data ?? []);
+      const rows = data ?? [];
+      const products = await Promise.all(rows.map((r) => fetchProduct(r.product_ref as string)));
+      setItems(rows.map((r, i) => ({
+        id: r.id as string,
+        product_ref: r.product_ref as string,
+        target_price: r.target_price as number | null,
+        product: products[i],
+      })));
       setFetching(false);
     })();
   }, [user]);
@@ -85,7 +92,7 @@ function WishlistPage() {
       <p className="text-sm text-muted-foreground mt-1">We'll ping you the moment prices drop.</p>
       <div className="mt-5 space-y-3">
         {items.map((it) => {
-          const p = getProduct(it.product_ref);
+          const p = it.product;
           if (!p) return null;
           const drop = Math.round(((p.mrp - p.currentPrice) / p.mrp) * 100);
           const target = it.target_price ?? Math.round(p.currentPrice * 0.9);
