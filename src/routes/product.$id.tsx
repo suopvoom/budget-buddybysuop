@@ -1,28 +1,15 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Bell, Heart, Share2, Sparkles, Star, TrendingDown, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
-import { getProduct, type Product, type Listing } from "@/lib/mock-data";
+import { fetchProduct, type Product, type Listing } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-
 export const Route = createFileRoute("/product/$id")({
-  loader: ({ params }) => {
-    const product = getProduct(params.id);
-    if (!product) throw notFound();
-    return { product };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.product.name} · BudgetBuddy` },
-          { name: "description", content: loaderData.product.description },
-        ]
-      : [{ title: "Product · BudgetBuddy" }],
-  }),
+  head: () => ({ meta: [{ title: "Product · BudgetBuddy" }] }),
   component: ProductPage,
   notFoundComponent: () => (
     <div className="p-8 text-center">
@@ -36,15 +23,25 @@ export const Route = createFileRoute("/product/$id")({
 const ranges = ["30d", "90d", "1y"] as const;
 
 function ProductPage() {
-  const { product } = Route.useLoaderData() as { product: Product };
+  const { id } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<(typeof ranges)[number]>("90d");
   const [tracked, setTracked] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!user) { setTracked(false); return; }
+    setLoading(true);
+    fetchProduct(id).then((p) => {
+      setProduct(p);
+      setLoading(false);
+    });
+  }, [id]);
+
+  useEffect(() => {
+    if (!user || !product) { setTracked(false); return; }
     supabase
       .from("wishlist_items")
       .select("id")
@@ -52,10 +49,11 @@ function ProductPage() {
       .eq("product_ref", product.id)
       .maybeSingle()
       .then(({ data }) => setTracked(!!data));
-  }, [user, product.id]);
+  }, [user, product]);
 
   async function toggleTrack() {
     if (!user) { navigate({ to: "/auth" }); return; }
+    if (!product) return;
     setBusy(true);
     if (tracked) {
       const { error } = await supabase
@@ -77,10 +75,22 @@ function ProductPage() {
     setBusy(false);
   }
 
+  if (loading) {
+    return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+  }
+  if (!product) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-sm text-muted-foreground">Product not found.</p>
+        <Link to="/" className="text-primary text-sm">Go home</Link>
+      </div>
+    );
+  }
+
   const points = range === "30d" ? product.history.slice(-30) : product.history;
   const discount = Math.round(((product.mrp - product.currentPrice) / product.mrp) * 100);
-  const best = product.listings.slice().sort((a: Listing, b: Listing) => a.price - b.price)[0];
-
+  const sortedListings = product.listings.slice().sort((a: Listing, b: Listing) => a.price - b.price);
+  const best = sortedListings[0];
 
   const verdict =
     product.currentPrice <= product.avg * 0.95
@@ -92,7 +102,6 @@ function ProductPage() {
   return (
     <div className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-[440px] min-h-screen bg-background pb-32 shadow-[0_0_60px_-20px_rgba(0,0,0,0.15)]">
-        {/* Image header */}
         <div className="relative aspect-square bg-secondary">
           <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
           <div className="absolute inset-x-0 top-0 p-4 flex items-center justify-between">
@@ -132,7 +141,6 @@ function ProductPage() {
             </span>
           </div>
 
-          {/* Buddy AI verdict */}
           <div
             className={cn(
               "mt-4 rounded-2xl p-4 flex gap-3 border",
@@ -157,7 +165,6 @@ function ProductPage() {
             </div>
           </div>
 
-          {/* Price history */}
           <section className="mt-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-display text-lg text-foreground">Price history</h2>
@@ -177,31 +184,37 @@ function ProductPage() {
               </div>
             </div>
             <div className="h-44 -mx-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={points} margin={{ top: 10, right: 12, left: 12, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" hide />
-                  <YAxis domain={["dataMin - 30", "dataMax + 30"]} hide />
-                  <ReferenceLine y={product.avg} stroke="var(--color-muted-foreground)" strokeDasharray="3 3" opacity={0.4} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--color-foreground)",
-                      color: "var(--color-background)",
-                      border: "none",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                    labelStyle={{ color: "var(--color-background)", opacity: 0.7 }}
-                    formatter={(v: number) => [`₹${v}`, "Price"]}
-                  />
-                  <Area type="monotone" dataKey="price" stroke="var(--color-primary)" strokeWidth={2.5} fill="url(#pg)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              {points.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                  No price history yet
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={points} margin={{ top: 10, right: 12, left: 12, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="date" hide />
+                    <YAxis domain={["dataMin - 30", "dataMax + 30"]} hide />
+                    <ReferenceLine y={product.avg} stroke="var(--color-muted-foreground)" strokeDasharray="3 3" opacity={0.4} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-foreground)",
+                        color: "var(--color-background)",
+                        border: "none",
+                        borderRadius: 12,
+                        fontSize: 12,
+                      }}
+                      labelStyle={{ color: "var(--color-background)", opacity: 0.7 }}
+                      formatter={(v: number) => [`₹${v}`, "Price"]}
+                    />
+                    <Area type="monotone" dataKey="price" stroke="var(--color-primary)" strokeWidth={2.5} fill="url(#pg)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-2 mt-3">
               {[
@@ -217,40 +230,35 @@ function ProductPage() {
             </div>
           </section>
 
-          {/* Compare marketplaces */}
           <section className="mt-6">
             <h2 className="font-display text-lg text-foreground mb-3">Compare across stores</h2>
             <div className="space-y-2">
-              {product.listings
-                .slice()
-                .sort((a: Listing, b: Listing) => a.price - b.price)
-                .map((l: Listing) => (
-
-                  <div
-                    key={l.marketplace}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-2xl border transition",
-                      l === best ? "border-primary/50 bg-primary/5" : "border-border bg-card",
-                      !l.inStock && "opacity-50",
-                    )}
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">
-                      {l.marketplace.slice(0, 2)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{l.marketplace}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {l.inStock ? "In stock · Free delivery" : "Out of stock"}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-display text-base text-foreground">₹{l.price}</p>
-                      {l === best && (
-                        <p className="text-[10px] text-primary font-semibold uppercase tracking-wide">Best price</p>
-                      )}
-                    </div>
+              {sortedListings.map((l: Listing) => (
+                <div
+                  key={l.marketplace}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-2xl border transition",
+                    l === best ? "border-primary/50 bg-primary/5" : "border-border bg-card",
+                    !l.inStock && "opacity-50",
+                  )}
+                >
+                  <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">
+                    {l.marketplace.slice(0, 2)}
                   </div>
-                ))}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">{l.marketplace}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {l.inStock ? "In stock · Free delivery" : "Out of stock"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display text-base text-foreground">₹{l.price}</p>
+                    {l === best && (
+                      <p className="text-[10px] text-primary font-semibold uppercase tracking-wide">Best price</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -260,7 +268,6 @@ function ProductPage() {
           </section>
         </div>
 
-        {/* Sticky action bar */}
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] p-4 bg-background/95 backdrop-blur-xl border-t border-border/60 flex gap-2">
           <button
             onClick={toggleTrack}
@@ -275,9 +282,11 @@ function ProductPage() {
             {tracked ? <Check className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
             {tracked ? "Tracking" : "Track"}
           </button>
-          <button className="flex-1 h-12 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition">
-            Buy at {best.marketplace} · ₹{best.price}
-          </button>
+          {best && (
+            <button className="flex-1 h-12 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition">
+              Buy at {best.marketplace} · ₹{best.price}
+            </button>
+          )}
         </div>
       </div>
     </div>

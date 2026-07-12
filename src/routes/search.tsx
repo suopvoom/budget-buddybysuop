@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search as SearchIcon, SlidersHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ProductCard } from "@/components/product-card";
-import { products, categories } from "@/lib/mock-data";
+import { fetchProducts, fetchCategories, type Product } from "@/lib/products";
 
 export const Route = createFileRoute("/search")({
   head: () => ({ meta: [{ title: "Search · BudgetBuddy" }] }),
@@ -13,10 +13,24 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [cats, setCats] = useState<{ name: string; emoji: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([fetchProducts(), fetchCategories()]).then(([p, c]) => {
+      setProducts(p);
+      setCats(c);
+      setLoading(false);
+    });
+  }, []);
+
   const filtered = products.filter(
     (p) =>
       (!cat || p.category === cat) &&
-      (q === "" || p.name.toLowerCase().includes(q.toLowerCase()) || p.brand.toLowerCase().includes(q.toLowerCase())),
+      (q === "" ||
+        p.name.toLowerCase().includes(q.toLowerCase()) ||
+        p.brand.toLowerCase().includes(q.toLowerCase())),
   );
 
   return (
@@ -45,7 +59,7 @@ function SearchPage() {
         >
           All
         </button>
-        {categories.map((c) => (
+        {cats.map((c) => (
           <button
             key={c.name}
             onClick={() => setCat(c.name)}
@@ -58,7 +72,9 @@ function SearchPage() {
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground mt-4">{filtered.length} products · sorted by best deal</p>
+      <p className="text-xs text-muted-foreground mt-4">
+        {loading ? "Loading…" : `${filtered.length} products · sorted by best deal`}
+      </p>
 
       <div className="grid grid-cols-2 gap-3 mt-3">
         {filtered.map((p) => (

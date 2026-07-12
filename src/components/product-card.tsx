@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { TrendingDown, Heart } from "lucide-react";
-import type { Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 export function ProductCard({ product }: { product: Product }) {
