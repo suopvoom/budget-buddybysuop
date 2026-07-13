@@ -1,7 +1,10 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { Home, Search, Heart, User, Bell } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home },
@@ -12,6 +15,59 @@ const tabs = [
 
 export function AppShell({ children, title, showHeader = true }: { children: ReactNode; title?: string; showHeader?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setUnread(0);
+      return;
+    }
+    let cancelled = false;
+
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .then(({ count }) => {
+        if (!cancelled && typeof count === "number") setUnread(count);
+      });
+
+    const channel = supabase
+      .channel(`notif:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n = payload.new as { title: string; body: string | null; link: string | null };
+          setUnread((u) => u + 1);
+          toast(n.title, {
+            description: n.body ?? undefined,
+            action: n.link
+              ? { label: "View", onClick: () => navigate({ to: n.link! }) }
+              : undefined,
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [user, navigate]);
+
+  async function markAllRead() {
+    if (!user || unread === 0) return;
+    setUnread(0);
+    await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
+  }
 
   return (
     <div className="min-h-screen bg-background flex justify-center">
@@ -22,9 +78,17 @@ export function AppShell({ children, title, showHeader = true }: { children: Rea
               <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">BudgetBuddy</p>
               <h1 className="font-display text-2xl leading-tight text-foreground">{title ?? "Smart shopping"}</h1>
             </div>
-            <button className="relative h-11 w-11 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/70 transition">
+            <button
+              onClick={markAllRead}
+              className="relative h-11 w-11 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/70 transition"
+              aria-label={unread > 0 ? `${unread} unread notifications` : "Notifications"}
+            >
               <Bell className="h-5 w-5 text-foreground" />
-              <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-primary" />
+              {unread > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
             </button>
           </header>
         )}
