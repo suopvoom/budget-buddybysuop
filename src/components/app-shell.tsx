@@ -46,7 +46,7 @@ export function AppShell({ children, title, showHeader = true }: { children: Rea
           toast(n.title, {
             description: n.body ?? undefined,
             action: n.link
-              ? { label: "View", onClick: () => navigate({ to: n.link! }) }
+              ? { label: "View", onClick: () => navigate({ to: n.link as string }) }
               : undefined,
           });
         },
