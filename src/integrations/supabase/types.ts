@@ -412,7 +412,7 @@ export type Database = {
     }
     Enums: {
       alert_type: "price_drop" | "target_price" | "restock"
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "editor" | "moderator" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -541,7 +541,7 @@ export const Constants = {
   public: {
     Enums: {
       alert_type: ["price_drop", "target_price", "restock"],
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "editor", "moderator", "viewer"],
     },
   },
 } as const
