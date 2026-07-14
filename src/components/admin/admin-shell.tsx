@@ -60,7 +60,7 @@ export function AdminShell() {
             return (
               <Link
                 key={n.to}
-                to={n.to}
+                to={n.to as string}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition",
                   active ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-muted",
