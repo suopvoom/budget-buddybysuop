@@ -29,10 +29,10 @@ function CouponsPage() {
       ]}
       columns={[
         { key: "code", label: "Code" },
-        { key: "discount_pct", label: "%", render: (r: { discount_pct: number | null }) => r.discount_pct ? `${r.discount_pct}%` : "—" },
-        { key: "discount_amount", label: "₹", render: (r: { discount_amount: number | null }) => r.discount_amount ? `₹${r.discount_amount}` : "—" },
-        { key: "expires_at", label: "Expires", render: (r: { expires_at: string | null }) => r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "—" },
-        { key: "active", label: "Active", render: (r: { active: boolean }) => r.active ? "Yes" : "No" },
+        { key: "discount_pct", label: "%", render: (r: any) => r.discount_pct ? `${r.discount_pct}%` : "—" },
+        { key: "discount_amount", label: "₹", render: (r: any) => r.discount_amount ? `₹${r.discount_amount}` : "—" },
+        { key: "expires_at", label: "Expires", render: (r: any) => r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "—" },
+        { key: "active", label: "Active", render: (r: any) => r.active ? "Yes" : "No" },
       ]}
     />
   );
