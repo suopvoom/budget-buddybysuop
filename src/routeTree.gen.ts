@@ -17,12 +17,18 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSubcategoriesRouteImport } from './routes/admin.subcategories'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminPriceTrackingRouteImport } from './routes/admin.price-tracking'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMarketplacesRouteImport } from './routes/admin.marketplaces'
+import { Route as AdminImportExportRouteImport } from './routes/admin.import-export'
 import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminBrandsRouteImport } from './routes/admin.brands'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminProductsNewRouteImport } from './routes/admin.products.new'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 
@@ -66,6 +72,11 @@ const ProductIdRoute = ProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSubcategoriesRoute = AdminSubcategoriesRouteImport.update({
   id: '/subcategories',
   path: '/subcategories',
@@ -76,9 +87,24 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPriceTrackingRoute = AdminPriceTrackingRouteImport.update({
+  id: '/price-tracking',
+  path: '/price-tracking',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMarketplacesRoute = AdminMarketplacesRouteImport.update({
   id: '/marketplaces',
   path: '/marketplaces',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminImportExportRoute = AdminImportExportRouteImport.update({
+  id: '/import-export',
+  path: '/import-export',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCouponsRoute = AdminCouponsRouteImport.update({
@@ -94,6 +120,16 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
 const AdminBrandsRoute = AdminBrandsRouteImport.update({
   id: '/brands',
   path: '/brands',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminProductsNewRoute = AdminProductsNewRouteImport.update({
@@ -114,12 +150,18 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/import-export': typeof AdminImportExportRoute
   '/admin/marketplaces': typeof AdminMarketplacesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/price-tracking': typeof AdminPriceTrackingRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/subcategories': typeof AdminSubcategoriesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -131,12 +173,18 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/import-export': typeof AdminImportExportRoute
   '/admin/marketplaces': typeof AdminMarketplacesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/price-tracking': typeof AdminPriceTrackingRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/subcategories': typeof AdminSubcategoriesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/product/$id': typeof ProductIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -150,12 +198,18 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/import-export': typeof AdminImportExportRoute
   '/admin/marketplaces': typeof AdminMarketplacesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/price-tracking': typeof AdminPriceTrackingRoute
   '/admin/products': typeof AdminProductsRouteWithChildren
   '/admin/subcategories': typeof AdminSubcategoriesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -170,12 +224,18 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/wishlist'
+    | '/admin/analytics'
+    | '/admin/audit'
     | '/admin/brands'
     | '/admin/categories'
     | '/admin/coupons'
+    | '/admin/import-export'
     | '/admin/marketplaces'
+    | '/admin/notifications'
+    | '/admin/price-tracking'
     | '/admin/products'
     | '/admin/subcategories'
+    | '/admin/users'
     | '/product/$id'
     | '/admin/'
     | '/admin/products/$id'
@@ -187,12 +247,18 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/wishlist'
+    | '/admin/analytics'
+    | '/admin/audit'
     | '/admin/brands'
     | '/admin/categories'
     | '/admin/coupons'
+    | '/admin/import-export'
     | '/admin/marketplaces'
+    | '/admin/notifications'
+    | '/admin/price-tracking'
     | '/admin/products'
     | '/admin/subcategories'
+    | '/admin/users'
     | '/product/$id'
     | '/admin'
     | '/admin/products/$id'
@@ -205,12 +271,18 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/wishlist'
+    | '/admin/analytics'
+    | '/admin/audit'
     | '/admin/brands'
     | '/admin/categories'
     | '/admin/coupons'
+    | '/admin/import-export'
     | '/admin/marketplaces'
+    | '/admin/notifications'
+    | '/admin/price-tracking'
     | '/admin/products'
     | '/admin/subcategories'
+    | '/admin/users'
     | '/product/$id'
     | '/admin/'
     | '/admin/products/$id'
@@ -285,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/subcategories': {
       id: '/admin/subcategories'
       path: '/subcategories'
@@ -299,11 +378,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/price-tracking': {
+      id: '/admin/price-tracking'
+      path: '/price-tracking'
+      fullPath: '/admin/price-tracking'
+      preLoaderRoute: typeof AdminPriceTrackingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/marketplaces': {
       id: '/admin/marketplaces'
       path: '/marketplaces'
       fullPath: '/admin/marketplaces'
       preLoaderRoute: typeof AdminMarketplacesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/import-export': {
+      id: '/admin/import-export'
+      path: '/import-export'
+      fullPath: '/admin/import-export'
+      preLoaderRoute: typeof AdminImportExportRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/coupons': {
@@ -325,6 +425,20 @@ declare module '@tanstack/react-router' {
       path: '/brands'
       fullPath: '/admin/brands'
       preLoaderRoute: typeof AdminBrandsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/products/new': {
@@ -359,22 +473,34 @@ const AdminProductsRouteWithChildren = AdminProductsRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAuditRoute: typeof AdminAuditRoute
   AdminBrandsRoute: typeof AdminBrandsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
+  AdminImportExportRoute: typeof AdminImportExportRoute
   AdminMarketplacesRoute: typeof AdminMarketplacesRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminPriceTrackingRoute: typeof AdminPriceTrackingRoute
   AdminProductsRoute: typeof AdminProductsRouteWithChildren
   AdminSubcategoriesRoute: typeof AdminSubcategoriesRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAuditRoute: AdminAuditRoute,
   AdminBrandsRoute: AdminBrandsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCouponsRoute: AdminCouponsRoute,
+  AdminImportExportRoute: AdminImportExportRoute,
   AdminMarketplacesRoute: AdminMarketplacesRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminPriceTrackingRoute: AdminPriceTrackingRoute,
   AdminProductsRoute: AdminProductsRouteWithChildren,
   AdminSubcategoriesRoute: AdminSubcategoriesRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
