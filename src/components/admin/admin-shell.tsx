@@ -8,7 +8,8 @@ import { useRoles } from "@/hooks/use-role";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const nav = [
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+const nav: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/brands", label: "Brands", icon: Tag },
@@ -21,7 +22,7 @@ const nav = [
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/import-export", label: "Import / Export", icon: Upload },
   { to: "/admin/audit", label: "Audit Logs", icon: ClipboardList },
-] as const;
+];
 
 export function AdminShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
