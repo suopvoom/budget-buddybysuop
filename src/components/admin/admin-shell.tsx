@@ -60,7 +60,7 @@ export function AdminShell() {
             return (
               <Link
                 key={n.to}
-                to={n.to as string}
+                to={n.to as never}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition",
                   active ? "bg-primary text-primary-foreground font-medium" : "text-foreground hover:bg-muted",
@@ -73,7 +73,7 @@ export function AdminShell() {
           })}
         </nav>
         <div className="p-3 border-t space-y-1">
-          <Link to="/" className="flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-muted">
+          <Link to={"/" as never} className="flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-muted">
             <LayoutDashboard className="h-4 w-4" /> Back to app
           </Link>
           <button
