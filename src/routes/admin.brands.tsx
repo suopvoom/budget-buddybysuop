@@ -18,7 +18,7 @@ export const Route = createFileRoute("/admin/brands")({
         {
           key: "logo_url",
           label: "Logo",
-          render: (r: { logo_url: string | null }) =>
+          render: (r: any) =>
             r.logo_url ? <img src={r.logo_url} alt="" className="h-8 w-8 rounded object-cover" /> : "—",
         },
       ]}
