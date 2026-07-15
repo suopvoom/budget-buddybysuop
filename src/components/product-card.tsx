@@ -1,54 +1,61 @@
 import { Link } from "@tanstack/react-router";
-import { TrendingDown, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 export function ProductCard({ product }: { product: Product }) {
-  const discount = Math.round(((product.mrp - product.currentPrice) / product.mrp) * 100);
+  const discount =
+    product.mrp > 0 ? Math.round(((product.mrp - product.currentPrice) / product.mrp) * 100) : 0;
   return (
     <Link
       to="/product/$id"
       params={{ id: product.id }}
-      className="group block bg-card rounded-3xl overflow-hidden border border-border/60 hover:border-primary/40 transition-all"
+      className="group block"
     >
-      <div className="relative aspect-square bg-secondary overflow-hidden">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
-        {product.tag && (
-          <span
-            className={cn(
-              "absolute top-2.5 left-2.5 text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide",
-              product.tag === "Lowest ever" && "bg-success text-success-foreground",
-              product.tag === "Deal" && "bg-primary text-primary-foreground",
-              product.tag === "Trending" && "bg-accent text-accent-foreground",
-              product.tag === "New" && "bg-foreground text-background",
-            )}
-          >
-            {product.tag}
+        {discount >= 15 && (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+            −{discount}%
           </span>
         )}
         <button
-          onClick={(e) => e.preventDefault()}
-          className="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-background/90 backdrop-blur flex items-center justify-center hover:bg-background"
+          onClick={(e) => {
+            e.preventDefault();
+          }}
+          aria-label="Save"
+          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-background/85 text-foreground backdrop-blur transition hover:bg-background"
         >
-          <Heart className="h-4 w-4 text-foreground" />
+          <Heart className="h-3.5 w-3.5" strokeWidth={1.75} />
         </button>
       </div>
-      <div className="p-3">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{product.brand}</p>
-        <h3 className="text-sm font-medium text-foreground line-clamp-2 mt-0.5 leading-snug">{product.name}</h3>
-        <div className="mt-2 flex items-end gap-1.5">
-          <span className="font-display text-lg text-foreground">₹{product.currentPrice}</span>
-          <span className="text-xs text-muted-foreground line-through mb-0.5">₹{product.mrp}</span>
+      <div className="pt-2.5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          {product.brand || "\u00A0"}
+        </p>
+        <h3 className="mt-0.5 line-clamp-2 text-[13px] font-medium leading-snug text-foreground">
+          {product.name}
+        </h3>
+        <div className="mt-1.5 flex items-baseline gap-1.5">
+          <span className="tabular text-[15px] font-semibold text-foreground">
+            ₹{product.currentPrice.toLocaleString()}
+          </span>
+          {product.mrp > product.currentPrice && (
+            <span className="tabular text-[11px] text-muted-foreground line-through">
+              ₹{product.mrp.toLocaleString()}
+            </span>
+          )}
         </div>
-        <div className="mt-1.5 flex items-center gap-1 text-[11px] text-success font-medium">
-          <TrendingDown className="h-3 w-3" />
-          {discount}% off · lowest ₹{product.lowest}
-        </div>
+        {product.listings.length > 0 && (
+          <p className={cn("mt-0.5 text-[10px] text-muted-foreground")}>
+            {product.listings.length} store{product.listings.length > 1 ? "s" : ""}
+          </p>
+        )}
       </div>
     </Link>
   );
