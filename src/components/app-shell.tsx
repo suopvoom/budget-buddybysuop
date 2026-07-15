@@ -1,30 +1,62 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, Search, Heart, User, Bell } from "lucide-react";
+import { Home, Search, Bookmark, User, Bell } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { BuddyFab } from "@/components/buddy-ai";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home },
   { to: "/search", label: "Search", icon: Search },
-  { to: "/wishlist", label: "Wishlist", icon: Heart },
+  { to: "/wishlist", label: "Saved", icon: Bookmark },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
-export function AppShell({ children, title, showHeader = true }: { children: ReactNode; title?: string; showHeader?: boolean }) {
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 5) return "Good night";
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+export function AppShell({
+  children,
+  title,
+  eyebrow,
+  showHeader = true,
+}: {
+  children: ReactNode;
+  title?: string;
+  eyebrow?: string;
+  showHeader?: boolean;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useAuth();
   const [unread, setUnread] = useState(0);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
       setUnread(0);
+      setDisplayName(null);
       return;
     }
     let cancelled = false;
+
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const name = (data?.display_name as string | null) ?? user.email?.split("@")[0] ?? null;
+        setDisplayName(name);
+      });
 
     supabase
       .from("notifications")
@@ -69,33 +101,45 @@ export function AppShell({ children, title, showHeader = true }: { children: Rea
       .eq("read", false);
   }
 
+  const firstName = displayName?.split(" ")[0];
+  const resolvedEyebrow = eyebrow ?? "BUDGETBUDDY";
+  const resolvedTitle =
+    title ?? (firstName ? `${greeting()}, ${firstName}` : greeting() === "Good night" ? "Welcome back" : `${greeting()}`);
+
   return (
     <div className="min-h-screen bg-background flex justify-center">
-      <div className="w-full max-w-[440px] min-h-screen bg-background relative pb-24 shadow-[0_0_60px_-20px_rgba(0,0,0,0.15)]">
+      <div className="w-full max-w-[440px] min-h-screen bg-background relative pb-28">
         {showHeader && (
-          <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-xl px-5 pt-5 pb-3 flex items-center justify-between border-b border-border/40">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground font-medium">BudgetBuddy</p>
-              <h1 className="font-display text-2xl leading-tight text-foreground">{title ?? "Smart shopping"}</h1>
+          <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl px-5 pt-6 pb-4 flex items-start justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground font-semibold">
+                {resolvedEyebrow}
+              </p>
+              <h1 className="font-display text-[26px] leading-[1.15] tracking-tight text-foreground mt-1 truncate">
+                {resolvedTitle}
+              </h1>
             </div>
             <button
               onClick={markAllRead}
-              className="relative h-11 w-11 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/70 transition"
+              className="relative mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border/80 bg-card text-foreground transition hover:bg-secondary"
               aria-label={unread > 0 ? `${unread} unread notifications` : "Notifications"}
             >
-              <Bell className="h-5 w-5 text-foreground" />
+              <Bell className="h-[18px] w-[18px]" strokeWidth={1.75} />
               {unread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
                   {unread > 9 ? "9+" : unread}
                 </span>
               )}
             </button>
           </header>
         )}
-        <main className="px-5 pt-4">{children}</main>
+        <main className="px-5">{children}</main>
 
-        <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[408px]">
-          <div className="bg-foreground text-background rounded-full px-2 py-2 flex items-center justify-between shadow-[0_10px_40px_-10px_rgba(0,0,0,0.4)]">
+        <nav
+          className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-[440px] px-4"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="mx-auto flex items-center justify-around rounded-full border border-border/80 bg-background/95 backdrop-blur-xl px-2 py-1.5 shadow-[0_12px_40px_-16px_rgba(0,0,0,0.25)]">
             {tabs.map((t) => {
               const active = t.to === "/" ? pathname === "/" : pathname.startsWith(t.to);
               const Icon = t.icon;
@@ -104,17 +148,27 @@ export function AppShell({ children, title, showHeader = true }: { children: Rea
                   key={t.to}
                   to={t.to}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-full transition-all text-xs font-medium",
-                    active ? "bg-primary text-primary-foreground" : "text-background/60 hover:text-background",
+                    "group relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-full transition",
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )}
+                  aria-label={t.label}
                 >
-                  <Icon className="h-4 w-4" strokeWidth={2.25} />
-                  {active && <span>{t.label}</span>}
+                  <Icon
+                    className="h-[20px] w-[20px]"
+                    strokeWidth={active ? 2.25 : 1.75}
+                    fill={active ? "currentColor" : "none"}
+                    fillOpacity={active ? 0.12 : 0}
+                  />
+                  <span className={cn("text-[10px] font-medium tracking-wide", active ? "opacity-100" : "opacity-70")}>
+                    {t.label}
+                  </span>
                 </Link>
               );
             })}
           </div>
         </nav>
+
+        <BuddyFab />
       </div>
     </div>
   );
