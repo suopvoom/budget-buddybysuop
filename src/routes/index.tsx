@@ -22,8 +22,8 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "BudgetBuddy — Never pay full price again" },
       { name: "description", content: "Track prices, spot real deals, and shop smarter across beauty & personal care." },
-      { property: "og:title", content: "BudgetBuddy — Smart shopping companion" },
-      { property: "og:description", content: "Track prices, spot real deals, and shop smarter." },
+      { property: "og:title", content: "BudgetBuddy — Never pay full price again" },
+      { property: "og:description", content: "Track prices, spot real deals, and shop smarter across beauty & personal care." },
     ],
   }),
   component: Home,
