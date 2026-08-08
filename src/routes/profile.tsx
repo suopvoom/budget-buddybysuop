@@ -137,39 +137,26 @@ function ProfilePage() {
 }
 
 function AdminAccess() {
-  const [state, setState] = useState<"none" | "member" | "no-admin-exists">("none");
-  const [busy, setBusy] = useState(false);
+  const [isMember, setIsMember] = useState(false);
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const [{ data: mine }, { count }] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", u.user.id).in("role", ["admin", "editor", "moderator", "viewer"]),
-        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin"),
-      ]);
-      if (mine && mine.length > 0) setState("member");
-      else if ((count ?? 0) === 0) setState("no-admin-exists");
+      const { data: mine } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", u.user.id)
+        .in("role", ["admin", "editor", "moderator", "viewer"]);
+      setIsMember((mine ?? []).length > 0);
     })();
   }, []);
-  async function claim() {
-    setBusy(true);
-    const { data, error } = await supabase.rpc("claim_first_admin");
-    if (error || !data) toast.error("Couldn't claim admin");
-    else { toast.success("You are admin"); setState("member"); }
-    setBusy(false);
-  }
-  if (state === "none") return null;
+  if (!isMember) return null;
   return (
     <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-4">
-      {state === "member" ? (
-        <Link to="/admin" className="flex items-center justify-between text-sm font-medium">
-          <span>Open admin panel</span><ChevronRight className="h-4 w-4" />
-        </Link>
-      ) : (
-        <button onClick={claim} disabled={busy} className="w-full text-sm font-medium text-primary">
-          {busy ? "Claiming…" : "Claim admin (no admin exists yet)"}
-        </button>
-      )}
+      <Link to="/admin" className="flex items-center justify-between text-sm font-medium">
+        <span>Open admin panel</span><ChevronRight className="h-4 w-4" />
+      </Link>
     </div>
   );
 }
+
