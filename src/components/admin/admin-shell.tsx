@@ -1,7 +1,7 @@
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, Package, Tag, Grid3x3, ShoppingBag, Ticket, Bell, Users,
-  TrendingDown, BarChart3, Upload, ClipboardList, LogOut, Shield,
+  TrendingDown, BarChart3, Upload, ClipboardList, LogOut, Shield, Link2, PlugZap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRoles } from "@/hooks/use-role";
@@ -16,7 +16,9 @@ const nav: NavItem[] = [
   { to: "/admin/categories", label: "Categories", icon: Grid3x3 },
   { to: "/admin/marketplaces", label: "Marketplaces", icon: ShoppingBag },
   { to: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { to: "/admin/listings", label: "Listings", icon: Link2 },
   { to: "/admin/price-tracking", label: "Price Tracking", icon: TrendingDown },
+  { to: "/admin/integrations", label: "Data Sources", icon: PlugZap },
   { to: "/admin/notifications", label: "Notifications", icon: Bell },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
