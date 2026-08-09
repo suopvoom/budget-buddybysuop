@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Bell, Heart, Share2, Sparkles, Star, TrendingDown, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from "recharts";
-import { fetchProduct, type Product, type Listing } from "@/lib/products";
+import { fetchProduct, freshness, type HistoryRange, type Product, type Listing } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/product/$id")({
   errorComponent: () => <div className="p-8 text-center text-sm">Something went wrong.</div>,
 });
 
-const ranges = ["30d", "90d", "1y"] as const;
+const ranges: HistoryRange[] = ["7d", "30d", "90d", "6m", "1y"];
 
 function ProductPage() {
   const { id } = Route.useParams();
@@ -28,17 +28,17 @@ function ProductPage() {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState<(typeof ranges)[number]>("90d");
+  const [range, setRange] = useState<HistoryRange>("90d");
   const [tracked, setTracked] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    fetchProduct(id).then((p) => {
+    fetchProduct(id, range).then((p) => {
       setProduct(p);
       setLoading(false);
     });
-  }, [id]);
+  }, [id, range]);
 
   useEffect(() => {
     if (!user || !product) { setTracked(false); return; }
@@ -87,7 +87,8 @@ function ProductPage() {
     );
   }
 
-  const points = range === "30d" ? product.history.slice(-30) : product.history;
+  const points = product.history;
+  const fresh = freshness(product.lastCheckedAt);
   const discount = Math.round(((product.mrp - product.currentPrice) / product.mrp) * 100);
   const sortedListings = product.listings.slice().sort((a: Listing, b: Listing) => a.price - b.price);
   const best = sortedListings[0];
@@ -140,6 +141,11 @@ function ProductPage() {
               {discount}% off
             </span>
           </div>
+
+          <p className={cn("mt-2 text-[11px]", fresh.stale ? "text-destructive" : "text-muted-foreground")}>
+            {fresh.stale ? "Price data may be outdated · " : ""}
+            {fresh.label}
+          </p>
 
           <div
             className={cn(
@@ -248,7 +254,9 @@ function ProductPage() {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">{l.marketplace}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {l.inStock ? "In stock · Free delivery" : "Out of stock"}
+                      {l.inStock ? "In stock" : "Out of stock"}
+                      {l.delivery ? ` · ${l.delivery}` : ""}
+                      {l.seller ? ` · ${l.seller}` : ""}
                     </p>
                   </div>
                   <div className="text-right">

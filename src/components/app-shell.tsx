@@ -101,10 +101,20 @@ export function AppShell({
       .eq("read", false);
   }
 
+  const [greet, setGreet] = useState<string | null>(null);
+  useEffect(() => { setGreet(greeting()); }, []);
+
   const firstName = displayName?.split(" ")[0];
   const resolvedEyebrow = eyebrow ?? "BUDGETBUDDY";
   const resolvedTitle =
-    title ?? (firstName ? `${greeting()}, ${firstName}` : greeting() === "Good night" ? "Welcome back" : `${greeting()}`);
+    title ??
+    (greet === null
+      ? "Welcome back"
+      : firstName
+        ? `${greet}, ${firstName}`
+        : greet === "Good night"
+          ? "Welcome back"
+          : greet);
 
   return (
     <div className="min-h-screen bg-background flex justify-center">

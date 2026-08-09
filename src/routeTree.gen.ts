@@ -23,6 +23,8 @@ import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPriceTrackingRouteImport } from './routes/admin.price-tracking'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMarketplacesRouteImport } from './routes/admin.marketplaces'
+import { Route as AdminListingsRouteImport } from './routes/admin.listings'
+import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminImportExportRouteImport } from './routes/admin.import-export'
 import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
@@ -102,6 +104,16 @@ const AdminMarketplacesRoute = AdminMarketplacesRouteImport.update({
   path: '/marketplaces',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminListingsRoute = AdminListingsRouteImport.update({
+  id: '/listings',
+  path: '/listings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIntegrationsRoute = AdminIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminImportExportRoute = AdminImportExportRouteImport.update({
   id: '/import-export',
   path: '/import-export',
@@ -156,6 +168,8 @@ export interface FileRoutesByFullPath {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/import-export': typeof AdminImportExportRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
+  '/admin/listings': typeof AdminListingsRoute
   '/admin/marketplaces': typeof AdminMarketplacesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/price-tracking': typeof AdminPriceTrackingRoute
@@ -179,6 +193,8 @@ export interface FileRoutesByTo {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/import-export': typeof AdminImportExportRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
+  '/admin/listings': typeof AdminListingsRoute
   '/admin/marketplaces': typeof AdminMarketplacesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/price-tracking': typeof AdminPriceTrackingRoute
@@ -204,6 +220,8 @@ export interface FileRoutesById {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/coupons': typeof AdminCouponsRoute
   '/admin/import-export': typeof AdminImportExportRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
+  '/admin/listings': typeof AdminListingsRoute
   '/admin/marketplaces': typeof AdminMarketplacesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/price-tracking': typeof AdminPriceTrackingRoute
@@ -230,6 +248,8 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/import-export'
+    | '/admin/integrations'
+    | '/admin/listings'
     | '/admin/marketplaces'
     | '/admin/notifications'
     | '/admin/price-tracking'
@@ -253,6 +273,8 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/import-export'
+    | '/admin/integrations'
+    | '/admin/listings'
     | '/admin/marketplaces'
     | '/admin/notifications'
     | '/admin/price-tracking'
@@ -277,6 +299,8 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/import-export'
+    | '/admin/integrations'
+    | '/admin/listings'
     | '/admin/marketplaces'
     | '/admin/notifications'
     | '/admin/price-tracking'
@@ -399,6 +423,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMarketplacesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/listings': {
+      id: '/admin/listings'
+      path: '/listings'
+      fullPath: '/admin/listings'
+      preLoaderRoute: typeof AdminListingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/integrations': {
+      id: '/admin/integrations'
+      path: '/integrations'
+      fullPath: '/admin/integrations'
+      preLoaderRoute: typeof AdminIntegrationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/import-export': {
       id: '/admin/import-export'
       path: '/import-export'
@@ -479,6 +517,8 @@ interface AdminRouteChildren {
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
   AdminImportExportRoute: typeof AdminImportExportRoute
+  AdminIntegrationsRoute: typeof AdminIntegrationsRoute
+  AdminListingsRoute: typeof AdminListingsRoute
   AdminMarketplacesRoute: typeof AdminMarketplacesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPriceTrackingRoute: typeof AdminPriceTrackingRoute
@@ -495,6 +535,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCouponsRoute: AdminCouponsRoute,
   AdminImportExportRoute: AdminImportExportRoute,
+  AdminIntegrationsRoute: AdminIntegrationsRoute,
+  AdminListingsRoute: AdminListingsRoute,
   AdminMarketplacesRoute: AdminMarketplacesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPriceTrackingRoute: AdminPriceTrackingRoute,
