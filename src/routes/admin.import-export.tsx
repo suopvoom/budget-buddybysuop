@@ -5,21 +5,46 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, FileSpreadsheet } from "lucide-react";
 import { logAudit, slugify } from "@/lib/audit";
+import {
+  importListings,
+  importVariants,
+  loadMarketplaces,
+  LISTING_TEMPLATE,
+  VARIANT_TEMPLATE,
+  type CsvRow,
+  type ImportReport,
+  type Lookup,
+} from "@/lib/csv-import";
 
 export const Route = createFileRoute("/admin/import-export")({
   head: () => ({ meta: [{ title: "Import / Export · Admin" }, { name: "robots", content: "noindex" }] }),
   component: ImportExportPage,
 });
 
-type Report = { created: number; updated: number; skipped: number; errors: { row: number; msg: string }[] };
+type Report = ImportReport;
+
+function downloadText(filename: string, text: string) {
+  const blob = new Blob([text], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function parseCsv(text: string): CsvRow[] {
+  return Papa.parse<CsvRow>(text, { header: true, skipEmptyLines: true, transformHeader: (h) => h.trim().toLowerCase() }).data;
+}
 
 function ImportExportPage() {
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
   const [brands, setBrands] = useState<Map<string, string>>(new Map());
   const [cats, setCats] = useState<Map<string, string>>(new Map());
+  const [marketplaces, setMarketplaces] = useState<Lookup>(new Map());
 
   useEffect(() => {
     supabase.from("brands").select("id, name").then(({ data }) => {
@@ -28,7 +53,31 @@ function ImportExportPage() {
     supabase.from("categories").select("id, name").then(({ data }) => {
       setCats(new Map((data ?? []).map((c) => [c.name.toLowerCase(), c.id])));
     });
+    loadMarketplaces().then(setMarketplaces);
   }, []);
+
+  async function runImport(
+    e: React.ChangeEvent<HTMLInputElement>,
+    entity: "product_listings" | "product_variants",
+    fn: (rows: CsvRow[]) => Promise<Report>,
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    setReport(null);
+    try {
+      const r = await fn(parseCsv(await file.text()));
+      await logAudit("import", entity, null, { created: r.created, updated: r.updated, errors: r.errors.length });
+      setReport(r);
+      toast.success(`Imported ${r.created} · Updated ${r.updated} · Errors ${r.errors.length}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
+  }
+
 
   async function exportProducts() {
     const { data } = await supabase
