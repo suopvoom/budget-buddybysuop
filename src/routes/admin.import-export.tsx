@@ -145,7 +145,7 @@ function ImportExportPage() {
 
   return (
     <>
-      <PageHeader title="Import / Export" subtitle="Bulk manage products via CSV" />
+      <PageHeader title="Import / Export" subtitle="Bulk manage products, listings and variants via CSV" />
       <div className="p-8 grid grid-cols-2 gap-6 max-w-4xl">
         <div className="rounded-xl border bg-background p-6">
           <Download className="h-5 w-5 mb-2 text-muted-foreground" />
@@ -164,6 +164,56 @@ function ImportExportPage() {
             <input type="file" accept=".csv" className="hidden" onChange={handleImport} disabled={busy} />
           </label>
         </div>
+
+        <div className="rounded-xl border bg-background p-6">
+          <FileSpreadsheet className="h-5 w-5 mb-2 text-muted-foreground" />
+          <h2 className="font-semibold">Import marketplace listings</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Columns: <code className="text-xs">sku | product_id | barcode | slug | product_name</code> (to match the product), plus{" "}
+            <code className="text-xs">marketplace, price, mrp, product_url, external_product_id, currency, availability, seller_name, delivery_information, coupon_information, is_active</code>.
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Matched by store URL then product+store, so re-uploads update instead of duplicating. Each row also records a price-history point
+            (source <code>csv_import</code>), which powers charts and price-drop alerts.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <label className="inline-flex">
+              <Button asChild disabled={busy}><span>{busy ? "Importing…" : "Choose CSV"}</span></Button>
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                disabled={busy}
+                onChange={(e) => runImport(e, "product_listings", (rows) => importListings(rows, marketplaces))}
+              />
+            </label>
+            <Button variant="outline" onClick={() => downloadText("listings-template.csv", LISTING_TEMPLATE)}>Template</Button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border bg-background p-6">
+          <FileSpreadsheet className="h-5 w-5 mb-2 text-muted-foreground" />
+          <h2 className="font-semibold">Import product variants</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Columns: <code className="text-xs">sku | product_id | barcode | slug | product_name</code>, plus{" "}
+            <code className="text-xs">variant_name, value, variant_sku, variant_barcode, size, shade, image_url</code>.
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">Matched by variant SKU, then product + variant name/value.</p>
+          <div className="mt-4 flex gap-2">
+            <label className="inline-flex">
+              <Button asChild disabled={busy}><span>{busy ? "Importing…" : "Choose CSV"}</span></Button>
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                disabled={busy}
+                onChange={(e) => runImport(e, "product_variants", importVariants)}
+              />
+            </label>
+            <Button variant="outline" onClick={() => downloadText("variants-template.csv", VARIANT_TEMPLATE)}>Template</Button>
+          </div>
+        </div>
+
         {report && (
           <div className="col-span-2 rounded-xl border bg-background p-6">
             <h3 className="font-semibold mb-2">Report</h3>
@@ -177,3 +227,4 @@ function ImportExportPage() {
     </>
   );
 }
+
