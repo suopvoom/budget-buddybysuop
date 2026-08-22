@@ -100,13 +100,16 @@ function Home() {
     })();
   }, [user]);
 
-  const trending = useMemo(() => products.slice(0, 6), [products]);
+  const trending = useMemo(
+    () => [...products].sort((a, b) => b.reviews - a.reviews || b.rating - a.rating).slice(0, 8),
+    [products],
+  );
   const deals = useMemo(
     () =>
       products
         .filter((p) => p.mrp > p.currentPrice)
         .sort((a, b) => (b.mrp - b.currentPrice) / b.mrp - (a.mrp - a.currentPrice) / a.mrp)
-        .slice(0, 6),
+        .slice(0, 8),
     [products],
   );
 
@@ -189,7 +192,7 @@ function Home() {
           <p className="mt-3 text-sm text-muted-foreground">Loading…</p>
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-6">
-            {(deals.length ? deals : trending).slice(0, 4).map((p) => (
+            {(deals.length ? deals : trending).slice(0, 8).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
@@ -207,7 +210,7 @@ function Home() {
           <p className="mt-3 text-sm text-muted-foreground">Loading…</p>
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-6">
-            {trending.slice(0, 4).map((p) => (
+            {trending.slice(0, 8).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
